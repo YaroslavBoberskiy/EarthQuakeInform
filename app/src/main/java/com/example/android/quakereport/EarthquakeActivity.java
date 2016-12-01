@@ -20,7 +20,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -33,17 +32,8 @@ public class EarthquakeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.earthquake_activity);
 
-        // Create a fake list of custom earthquake locations.
-        final ArrayList<ForecastContent> earthquakes = new ArrayList<>();
-        earthquakes.add(new ForecastContent("2.5", "San Francisco", "30.11.2016"));
-        earthquakes.add(new ForecastContent("4.5", "London", "02.09.2014"));
-        earthquakes.add(new ForecastContent("2.0", "Tokyo", "11.11.2007"));
-        earthquakes.add(new ForecastContent("5.7", "Mexico City", "09.10.2012"));
-        earthquakes.add(new ForecastContent("1.2", "Moscow", "23.08.2001"));
-        earthquakes.add(new ForecastContent("7.5", "Rio de Janeiro", "15.05.2011"));
-        earthquakes.add(new ForecastContent("3.9", "San Francisco", "14.10.2008"));
-        earthquakes.add(new ForecastContent("3.9", "Paris", "10.10.2013"));
-
+        // Get the list of earthquake locations.
+        final ArrayList<ForecastContent> earthquakes = QueryUtils.extractEarthquakes();
 
         // Find a reference to the {@link ListView} in the layout
         ListView earthquakeListView = (ListView) findViewById(R.id.list);
@@ -58,7 +48,7 @@ public class EarthquakeActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 ForecastContent forecastContent = earthquakes.get(position);
-                Toast.makeText(getApplicationContext(), forecastContent.getLocation(), Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getApplicationContext(), forecastContent.getCity(), Toast.LENGTH_SHORT).show();
             }
         });
 

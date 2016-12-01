@@ -9,14 +9,14 @@ import android.widget.TextView;
 
 import java.util.List;
 
-/**
- * Created by YB on 30.11.2016.
- */
-
 public class ForecastListAdapter extends ArrayAdapter<ForecastContent> {
 
     private ForecastContent forecastContent;
     private View listItemView;
+    private String city;
+    private String km;
+    private String location;
+    private static final String LOCATION_SEPARATOR = " of ";
 
     public ForecastListAdapter(Context context, List<ForecastContent> objects) {
         super(context, 0, objects);
@@ -33,15 +33,30 @@ public class ForecastListAdapter extends ArrayAdapter<ForecastContent> {
         }
 
         forecastContent = getItem(position);
+        location = forecastContent.getLocation();
+
+        if (location.contains(LOCATION_SEPARATOR)) {
+            km = location.split(LOCATION_SEPARATOR)[0] + LOCATION_SEPARATOR;
+            city = location.split(LOCATION_SEPARATOR)[1];
+        } else {
+            km = getContext().getString(R.string.near_the);
+            city = location;
+        }
 
         TextView magnitudeTv = (TextView) listItemView.findViewById(R.id.magTextView);
-        TextView locationTv = (TextView) listItemView.findViewById(R.id.locTextView);
+        TextView cityTv = (TextView) listItemView.findViewById(R.id.locTextView);
         TextView dateTv = (TextView) listItemView.findViewById(R.id.dateTextView);
+        TextView timeTv = (TextView) listItemView.findViewById(R.id.timeTextView);
+        TextView kmTv = (TextView) listItemView.findViewById(R.id.kmTextView);
 
         magnitudeTv.setText(forecastContent.getMagnitude());
-        locationTv.setText(forecastContent.getLocation());
         dateTv.setText(forecastContent.getDate());
+        timeTv.setText(forecastContent.getTime());
+        cityTv.setText(city);
+        kmTv.setText(km);
+
 
         return listItemView;
     }
+
 }
