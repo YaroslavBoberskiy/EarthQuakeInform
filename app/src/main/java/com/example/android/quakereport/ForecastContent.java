@@ -9,22 +9,28 @@ import java.util.Date;
 
 public class ForecastContent {
 
-    private String magnitude;
+    private double magnitude;
     private String location;
     private long timeInMilliseconds;
+    private String quakeInfoUrl;
 
-    public ForecastContent(String magnitude, String location, long time) {
+    public ForecastContent(double magnitude, String location, long time, String quakeInfoUrl) {
         this.magnitude = magnitude;
         this.timeInMilliseconds = time;
         this.location = location;
+        this.quakeInfoUrl = quakeInfoUrl;
     }
 
-    public String getMagnitude() {
+    public double getMagnitude() {
         return magnitude;
     }
 
     public String getLocation() {
         return location;
+    }
+
+    public String getQuakeInfoUrl() {
+        return quakeInfoUrl;
     }
 
     public long getTimeInMilliseconds() {

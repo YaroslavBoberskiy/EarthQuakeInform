@@ -15,6 +15,8 @@
  */
 package com.example.android.quakereport;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -48,7 +50,10 @@ public class EarthquakeActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 ForecastContent forecastContent = earthquakes.get(position);
-//                Toast.makeText(getApplicationContext(), forecastContent.getCity(), Toast.LENGTH_SHORT).show();
+                String url = forecastContent.getQuakeInfoUrl();
+                Intent browser = new Intent(Intent.ACTION_VIEW);
+                browser.setData(Uri.parse(url));
+                startActivity(browser);
             }
         });
 
