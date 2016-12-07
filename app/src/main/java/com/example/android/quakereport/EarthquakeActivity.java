@@ -20,20 +20,18 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 
 public class EarthquakeActivity extends AppCompatActivity {
 
     public static final String LOG_TAG = EarthquakeActivity.class.getName();
     private static final String USGS_REQUEST_URL =
-            "http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2016-01-01&endtime=2016-05-02&minfelt=50&minmagnitude=2";
+            "http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventtype=earthquake&orderby=time&minmag=6&limit=10";
+    private ForecastListAdapter forecastAdapter;
 
 
     @Override
@@ -41,53 +39,62 @@ public class EarthquakeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.earthquake_activity);
 
+        // Find a reference to the {@link ListView} in the layout
+        ListView earthquakeListView = (ListView) findViewById(R.id.list);
+
+        forecastAdapter = new ForecastListAdapter(this, new ArrayList<ForecastContent>());
+        earthquakeListView.setAdapter(forecastAdapter);
+
+        // Set an item click listener on the ListView, which sends an intent to a web browser
+        // to open a website with more information about the selected earthquake.
+        earthquakeListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                // Find the current earthquake that was clicked on
+                ForecastContent currentEarthquake = forecastAdapter.getItem(position);
+
+                // Convert the String URL into a URI object (to pass into the Intent constructor)
+                Uri earthquakeUri = Uri.parse(currentEarthquake.getQuakeInfoUrl());
+
+                // Create a new intent to view the earthquake URI
+                Intent websiteIntent = new Intent(Intent.ACTION_VIEW, earthquakeUri);
+
+                // Send the intent to launch a new activity
+                startActivity(websiteIntent);
+            }
+        });
+
         QuakeAsyncTask quakeAsyncTask = new QuakeAsyncTask();
-        try {
-            quakeAsyncTask.execute(formURL(USGS_REQUEST_URL));
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
+        quakeAsyncTask.execute(USGS_REQUEST_URL);
 
     }
 
     private void updateUi(final ArrayList<ForecastContent> eatherquakes) {
-        // Find a reference to the {@link ListView} in the layout
-        ListView earthquakeListView = (ListView) findViewById(R.id.list);
 
-        // Create a custom {@link ForecastListAdapter} of earthquakes
-        ForecastListAdapter forecastAdapter = new ForecastListAdapter(this, eatherquakes);
+        forecastAdapter.clear();
 
-        // Set the adapter on the {@link ListView}
-        // so the list can be populated in the user interface
-
-        earthquakeListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                ForecastContent forecastContent = eatherquakes.get(position);
-                String url = forecastContent.getQuakeInfoUrl();
-                Intent browser = new Intent(Intent.ACTION_VIEW);
-                browser.setData(Uri.parse(url));
-                startActivity(browser);
-            }
-        });
-
-        earthquakeListView.setAdapter(forecastAdapter);
-    }
-
-    private static URL formURL (String urlAddress) throws MalformedURLException {
-        URL url = null;
-        if (TextUtils.isEmpty(urlAddress)) {
-            return null;
+        if (eatherquakes != null && !eatherquakes.isEmpty()) {
+            forecastAdapter.addAll(eatherquakes);
         }
-        url = new URL(urlAddress);
-        return url;
+
+        // If there is a valid list of {@link Earthquake}s, then add them to the adapter's
+        // data set. This will trigger the ListView to update.
+        if (eatherquakes != null && !eatherquakes.isEmpty()) {
+            forecastAdapter.addAll(eatherquakes);
+        }
     }
 
-    private class QuakeAsyncTask extends AsyncTask<URL,Void,ArrayList<ForecastContent>> {
+    private class QuakeAsyncTask extends AsyncTask<String,Void,ArrayList<ForecastContent>> {
 
         @Override
-        protected ArrayList<ForecastContent> doInBackground(URL... params) {
-            return QueryUtils.extractEarthquakes(params[0]);
+        protected ArrayList<ForecastContent> doInBackground(String... urls) {
+
+            // Don't perform the request if there are no URLs, or the first URL is null.
+            if (urls.length < 1 || urls[0] == null) {
+                return null;
+            }
+
+            return QueryUtils.extractEarthquakes(urls[0]);
         }
 
         @Override
