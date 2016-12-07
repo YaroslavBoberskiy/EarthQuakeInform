@@ -15,7 +15,9 @@
  */
 package com.example.android.quakereport;
 
+import android.app.LoaderManager;
 import android.content.Intent;
+import android.content.Loader;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -25,8 +27,9 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import java.util.ArrayList;
+import java.util.List;
 
-public class EarthquakeActivity extends AppCompatActivity {
+public class EarthquakeActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<ForecastContent>> {
 
     public static final String LOG_TAG = EarthquakeActivity.class.getName();
     private static final String USGS_REQUEST_URL =
@@ -82,6 +85,21 @@ public class EarthquakeActivity extends AppCompatActivity {
         if (eatherquakes != null && !eatherquakes.isEmpty()) {
             forecastAdapter.addAll(eatherquakes);
         }
+    }
+
+    @Override
+    public Loader<List<ForecastContent>> onCreateLoader(int id, Bundle args) {
+        return null;
+    }
+
+    @Override
+    public void onLoadFinished(Loader<List<ForecastContent>> loader, List<ForecastContent> data) {
+
+    }
+
+    @Override
+    public void onLoaderReset(Loader<List<ForecastContent>> loader) {
+
     }
 
     private class QuakeAsyncTask extends AsyncTask<String,Void,ArrayList<ForecastContent>> {
