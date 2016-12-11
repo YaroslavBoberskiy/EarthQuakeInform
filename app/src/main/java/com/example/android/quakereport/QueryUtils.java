@@ -120,7 +120,7 @@ public final class QueryUtils {
     public static ArrayList<ForecastContent> extractEarthquakes(String urlAddress) {
 
         try {
-            Thread.sleep(5000);
+            Thread.sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

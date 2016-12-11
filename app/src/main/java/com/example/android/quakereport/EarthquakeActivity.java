@@ -16,18 +16,22 @@
 package com.example.android.quakereport;
 
 import android.app.LoaderManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.Loader;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +43,8 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderManag
             "http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventtype=earthquake&orderby=time&minmag=6&limit=10";
     private ForecastListAdapter forecastAdapter;
     private ListView earthquakeListView;
-
+    private TextView emptyTextView;
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,12 +53,27 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderManag
 
         // Find a reference to the {@link ListView} in the layout
         earthquakeListView = (ListView) findViewById(R.id.list);
-
         forecastAdapter = new ForecastListAdapter(this, new ArrayList<ForecastContent>());
         earthquakeListView.setAdapter(forecastAdapter);
-        TextView emptyTextView = (TextView) findViewById(R.id.emptyView);
-        emptyTextView.setText("");
-        earthquakeListView.setEmptyView(emptyTextView);
+        emptyTextView = (TextView) findViewById(R.id.emptyView);
+        progressBar = (ProgressBar) findViewById(R.id.loadingSpinner);
+
+        ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+        if (networkInfo != null && networkInfo.isConnected()) {
+            emptyTextView.setText("");
+            earthquakeListView.setEmptyView(emptyTextView);
+            // Get a reference to the LoaderManager, in order to interact with loaders.
+            LoaderManager loaderManager = getLoaderManager();
+            // Initialize the loader. Pass in the int ID constant defined above and pass in null for
+            // the bundle. Pass in this activity for the LoaderCallbacks parameter (which is valid
+            // because this activity implements the LoaderCallbacks interface).
+            loaderManager.initLoader(EARTHQUAKE_LOADER_ID, null, this);
+        } else {
+            progressBar.setVisibility(View.GONE);
+            emptyTextView.setText(R.string.No_internet_conn);
+            earthquakeListView.setEmptyView(emptyTextView);
+        }
 
         // Set an item click listener on the ListView, which sends an intent to a web browser
         // to open a website with more information about the selected earthquake.
@@ -74,14 +94,6 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderManag
             }
         });
 
-        // Get a reference to the LoaderManager, in order to interact with loaders.
-        LoaderManager loaderManager = getLoaderManager();
-
-        // Initialize the loader. Pass in the int ID constant defined above and pass in null for
-        // the bundle. Pass in this activity for the LoaderCallbacks parameter (which is valid
-        // because this activity implements the LoaderCallbacks interface).
-        loaderManager.initLoader(EARTHQUAKE_LOADER_ID, null, this);
-
     }
 
     private void updateUi(final List<ForecastContent> eatherquakes) {
@@ -93,7 +105,6 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderManag
         if (eatherquakes != null && !eatherquakes.isEmpty()) {
             forecastAdapter.addAll(eatherquakes);
         } else {
-            TextView emptyTextView = (TextView) findViewById(R.id.emptyView);
             emptyTextView.setText(R.string.No_earthquake_info);
             earthquakeListView.setEmptyView(emptyTextView);
         }
@@ -109,7 +120,6 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderManag
     @Override
     public void onLoadFinished(Loader<List<ForecastContent>> loader, List<ForecastContent> data) {
         Log.i(LOG_TAG, "onLoadFinished");
-        ProgressBar progressBar = (ProgressBar) findViewById(R.id.loadingSpinner);
         progressBar.setVisibility(View.GONE);
         updateUi(data);
     }
@@ -118,6 +128,23 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderManag
     public void onLoaderReset(Loader<List<ForecastContent>> loader) {
         Log.i(LOG_TAG, "onLoaderReset");
         forecastAdapter.clear();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_settings) {
+            Intent settingsIntent = new Intent(this, SettingsActivity.class);
+            startActivity(settingsIntent);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
 }
