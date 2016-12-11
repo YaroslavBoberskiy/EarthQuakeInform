@@ -19,22 +19,26 @@ import android.app.LoaderManager;
 import android.content.Intent;
 import android.content.Loader;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class EarthquakeActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<ForecastContent>> {
 
-    public static final String LOG_TAG = EarthquakeActivity.class.getName();
+    public static final String LOG_TAG = EarthquakeActivity.class.getSimpleName();
+    private static final int EARTHQUAKE_LOADER_ID = 1;
     private static final String USGS_REQUEST_URL =
             "http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&eventtype=earthquake&orderby=time&minmag=6&limit=10";
     private ForecastListAdapter forecastAdapter;
+    private ListView earthquakeListView;
 
 
     @Override
@@ -43,10 +47,13 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderManag
         setContentView(R.layout.earthquake_activity);
 
         // Find a reference to the {@link ListView} in the layout
-        ListView earthquakeListView = (ListView) findViewById(R.id.list);
+        earthquakeListView = (ListView) findViewById(R.id.list);
 
         forecastAdapter = new ForecastListAdapter(this, new ArrayList<ForecastContent>());
         earthquakeListView.setAdapter(forecastAdapter);
+        TextView emptyTextView = (TextView) findViewById(R.id.emptyView);
+        emptyTextView.setText("");
+        earthquakeListView.setEmptyView(emptyTextView);
 
         // Set an item click listener on the ListView, which sends an intent to a web browser
         // to open a website with more information about the selected earthquake.
@@ -67,58 +74,50 @@ public class EarthquakeActivity extends AppCompatActivity implements LoaderManag
             }
         });
 
-        QuakeAsyncTask quakeAsyncTask = new QuakeAsyncTask();
-        quakeAsyncTask.execute(USGS_REQUEST_URL);
+        // Get a reference to the LoaderManager, in order to interact with loaders.
+        LoaderManager loaderManager = getLoaderManager();
+
+        // Initialize the loader. Pass in the int ID constant defined above and pass in null for
+        // the bundle. Pass in this activity for the LoaderCallbacks parameter (which is valid
+        // because this activity implements the LoaderCallbacks interface).
+        loaderManager.initLoader(EARTHQUAKE_LOADER_ID, null, this);
 
     }
 
-    private void updateUi(final ArrayList<ForecastContent> eatherquakes) {
+    private void updateUi(final List<ForecastContent> eatherquakes) {
 
         forecastAdapter.clear();
-
-        if (eatherquakes != null && !eatherquakes.isEmpty()) {
-            forecastAdapter.addAll(eatherquakes);
-        }
 
         // If there is a valid list of {@link Earthquake}s, then add them to the adapter's
         // data set. This will trigger the ListView to update.
         if (eatherquakes != null && !eatherquakes.isEmpty()) {
             forecastAdapter.addAll(eatherquakes);
+        } else {
+            TextView emptyTextView = (TextView) findViewById(R.id.emptyView);
+            emptyTextView.setText(R.string.No_earthquake_info);
+            earthquakeListView.setEmptyView(emptyTextView);
         }
     }
 
     @Override
     public Loader<List<ForecastContent>> onCreateLoader(int id, Bundle args) {
-        return null;
+        Log.i(LOG_TAG, "onCreateLoader");
+        // Create a new loader for the given URL
+        return new EarthquakeLoader(this, USGS_REQUEST_URL);
     }
 
     @Override
     public void onLoadFinished(Loader<List<ForecastContent>> loader, List<ForecastContent> data) {
-
+        Log.i(LOG_TAG, "onLoadFinished");
+        ProgressBar progressBar = (ProgressBar) findViewById(R.id.loadingSpinner);
+        progressBar.setVisibility(View.GONE);
+        updateUi(data);
     }
 
     @Override
     public void onLoaderReset(Loader<List<ForecastContent>> loader) {
-
-    }
-
-    private class QuakeAsyncTask extends AsyncTask<String,Void,ArrayList<ForecastContent>> {
-
-        @Override
-        protected ArrayList<ForecastContent> doInBackground(String... urls) {
-
-            // Don't perform the request if there are no URLs, or the first URL is null.
-            if (urls.length < 1 || urls[0] == null) {
-                return null;
-            }
-
-            return QueryUtils.extractEarthquakes(urls[0]);
-        }
-
-        @Override
-        protected void onPostExecute(ArrayList<ForecastContent> forecastContents) {
-            updateUi(forecastContents);
-        }
+        Log.i(LOG_TAG, "onLoaderReset");
+        forecastAdapter.clear();
     }
 
 }

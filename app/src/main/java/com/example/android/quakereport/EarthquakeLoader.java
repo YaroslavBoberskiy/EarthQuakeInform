@@ -1,7 +1,8 @@
 package com.example.android.quakereport;
 
 import android.content.Context;
-import android.support.v4.content.AsyncTaskLoader;
+import android.content.AsyncTaskLoader;
+import android.util.Log;
 
 import java.util.List;
 
@@ -11,18 +12,24 @@ import java.util.List;
 
 public class EarthquakeLoader extends AsyncTaskLoader {
 
-    public EarthquakeLoader(Context context) {
+    public static final String LOG_TAG = EarthquakeActivity.class.getSimpleName();
+    private String urlAddress;
+
+    public EarthquakeLoader(Context context, String urlAddress) {
         super(context);
+        this.urlAddress = urlAddress;
     }
 
     @Override
     protected void onStartLoading() {
+        Log.i(LOG_TAG, "onStartLoading");
         forceLoad();
     }
 
     @Override
     public List<ForecastContent> loadInBackground() {
-        return null;
+        Log.i(LOG_TAG, "loadInBackground");
+        return QueryUtils.extractEarthquakes(urlAddress);
     }
 
 

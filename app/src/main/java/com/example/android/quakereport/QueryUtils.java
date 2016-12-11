@@ -119,6 +119,12 @@ public final class QueryUtils {
 
     public static ArrayList<ForecastContent> extractEarthquakes(String urlAddress) {
 
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         ArrayList<ForecastContent> earthquakes = new ArrayList<>();
 
         try {
@@ -141,25 +147,28 @@ public final class QueryUtils {
             // which represents a list of features (or earthquakes).
             JSONArray featuresJsonArray = rootJsonObject.optJSONArray("features");
 
-            // For each earthquake in the earthquakeArray, create an {@link Earthquake} object
-            for (int i = 0; i < featuresJsonArray.length(); i ++) {
-                JSONObject featuresJsonObject = featuresJsonArray.optJSONObject(i);
-                JSONObject propertiesJsonObject = featuresJsonObject.getJSONObject("properties");
+            if (featuresJsonArray.length() > 0) {
+                // For each earthquake in the earthquakeArray, create an {@link Earthquake} object
+                for (int i = 0; i < featuresJsonArray.length(); i ++) {
+                    JSONObject featuresJsonObject = featuresJsonArray.optJSONObject(i);
+                    JSONObject propertiesJsonObject = featuresJsonObject.getJSONObject("properties");
 
-                // Extract the value for the key called "mag"
-                magnitude = propertiesJsonObject.getDouble("mag");
-                // Extract the value for the key called "place"
-                place = propertiesJsonObject.getString("place");
-                // Extract the value for the key called "time"
-                time = propertiesJsonObject.getLong("time");
-                // Extract the value for the key called "url"
-                quakeInfoUrl = propertiesJsonObject.getString("url");
+                    // Extract the value for the key called "mag"
+                    magnitude = propertiesJsonObject.getDouble("mag");
+                    // Extract the value for the key called "place"
+                    place = propertiesJsonObject.getString("place");
+                    // Extract the value for the key called "time"
+                    time = propertiesJsonObject.getLong("time");
+                    // Extract the value for the key called "url"
+                    quakeInfoUrl = propertiesJsonObject.getString("url");
 
-                // Add ForecastContent object to the earthquakes ArrayList
-                earthquakes.add(new ForecastContent(magnitude, place, time, quakeInfoUrl));
+                    // Add ForecastContent object to the earthquakes ArrayList
+                    earthquakes.add(new ForecastContent(magnitude, place, time, quakeInfoUrl));
             }
-
-
+            }
+            else {
+                return null;
+            }
         } catch (JSONException e) {
             // If an error is thrown when executing any of the above statements in the "try" block,
             // catch the exception here, so the app doesn't crash. Print a log message
